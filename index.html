@@ -318,8 +318,8 @@ select{appearance:none;-webkit-appearance:none;background-image:url("data:image/
   <div class="sheet-handle"></div>
   <h2 id="ticker-title">종목 추가</h2>
   <div class="frow">
-    <div class="field"><label>종목코드</label><input id="t-code" placeholder="A069500" inputmode="text"></div>
-    <div class="field"><label>종목명</label><input id="t-name" placeholder="KODEX 200"></div>
+    <div class="field"><label>종목코드</label><input id="t-code" placeholder="A069500" inputmode="text" oninput="onCodeInput(this.value)"></div>
+    <div class="field"><label>종목명 <span id="t-name-status" style="font-size:10px;color:var(--text3)"></span></label><input id="t-name" placeholder="자동입력" oninput="this.dataset.manual=this.value?'1':''"></div>
   </div>
   <div class="frow">
     <div class="field"><label>계좌</label>
@@ -716,6 +716,7 @@ function openTicker(idx){
   const t=idx>=0?T[idx]:{code:'',name:'',acct:'일반',cat:'국내주식',qty:'',cost:'',price:''};
   document.getElementById('t-code').value=t.code;
   document.getElementById('t-name').value=t.name;
+  document.getElementById('t-name').dataset.manual='1';
   document.getElementById('t-acct').value=t.acct;
   document.getElementById('t-cat').value=t.cat;
   document.getElementById('t-qty').value=t.qty||'';
@@ -723,6 +724,49 @@ function openTicker(idx){
   document.getElementById('t-price').value=t.price||'';
   openSheet('s-ticker');
 }
+function onCodeInput(val){
+  val = val.trim();
+  if(!val) return;
+  // A069500 또는 069500 형식 모두 처리
+  const code = val.replace(/^A/i,'').padStart(6,'0');
+  if(code.length !== 6 || !/^\d{6}$/.test(code)) return;
+  
+  const status = document.getElementById('t-name-status');
+  const nameEl = document.getElementById('t-name');
+  
+  // 이미 이름이 있고 사용자가 직접 입력한 경우 덮어쓰지 않음
+  if(nameEl.dataset.manual === '1') return;
+  
+  status.textContent = '조회중...';
+  
+  // 네이버 금융 종목 검색 API (JSONP 방식, CORS 없음)
+  const script = document.createElement('script');
+  const cbName = '_ncb_' + code;
+  window[cbName] = function(data) {
+    document.head.removeChild(script);
+    delete window[cbName];
+    if(data && data.items && data.items.length > 0) {
+      const item = data.items.find(i => i.code === code) || data.items[0];
+      if(item && item.name) {
+        nameEl.value = item.name;
+        status.textContent = '✓';
+        setTimeout(()=>status.textContent='', 2000);
+      } else {
+        status.textContent = '';
+      }
+    } else {
+      status.textContent = '';
+    }
+  };
+  script.onerror = () => {
+    document.head.removeChild(script);
+    delete window[cbName];
+    status.textContent = '';
+  };
+  script.src = `https://ac.finance.naver.com/ac?q=${code}&q_enc=utf-8&t_koreng=1&st=111&r_format=json&callback=${cbName}`;
+  document.head.appendChild(script);
+}
+
 function saveTicker(){
   const t={
     code:document.getElementById('t-code').value.trim(),
