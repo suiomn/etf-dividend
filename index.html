@@ -7,8 +7,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="ETF 배당">
-<title>ETF 배당 트래커</title>
+<meta name="apple-mobile-web-app-title" content="ETF ë°°ë¹">
+<title>ETF ë°°ë¹ í¸ëì»¤</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{
@@ -166,46 +166,58 @@ select{appearance:none;-webkit-appearance:none;background-image:url("data:image/
 .install-banner p{font-size:12px;color:var(--blue);line-height:1.5;flex:1}
 .install-banner button{background:var(--blue);color:white;border:none;border-radius:var(--radius-sm);padding:7px 12px;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap;font-weight:600}
 </style>
+
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  const FC={apiKey:"AIzaSyBuoJ6t_-VKG8gatAWXvpozkRB80z4Jj3M",authDomain:"etf-dividend-tracker-303a9.firebaseapp.com",projectId:"etf-dividend-tracker-303a9",storageBucket:"etf-dividend-tracker-303a9.firebasestorage.app",messagingSenderId:"458291669933",appId:"1:458291669933:web:0aec6394b7255e5afb0f24"};
+  const app=initializeApp(FC),db=getFirestore(app),DID="main";
+  window.firebasePersist=async(T,D)=>{try{await setDoc(doc(db,"etf-data",DID),{tickers:JSON.stringify(T),dividends:JSON.stringify(D),updatedAt:Date.now()});return true;}catch(e){return false;}};
+  window.firebaseHydrate=async()=>{try{const s=await getDoc(doc(db,"etf-data",DID));if(s.exists()){const d=s.data();return{tickers:JSON.parse(d.tickers||"[]"),dividends:JSON.parse(d.dividends||"[]"),updatedAt:d.updatedAt};}return null;}catch(e){return null;}};
+  window.firebaseListen=(cb)=>onSnapshot(doc(db,"etf-data",DID),(s)=>{if(s.exists()){const d=s.data();cb({tickers:JSON.parse(d.tickers||"[]"),dividends:JSON.parse(d.dividends||"[]"),updatedAt:d.updatedAt});}});
+  window._firebaseReady=true;document.dispatchEvent(new Event("firebase-ready"));
+</script>
 </head>
 <body>
 
 <div id="loader">
   <div class="spinner"></div>
-  <div style="font-size:13px;color:var(--text3)">불러오는 중...</div>
+  <div style="font-size:13px;color:var(--text3)">ë¶ë¬ì¤ë ì¤...</div>
 </div>
 
 <div class="app">
   <div class="topbar">
-    <div class="topbar-title">ETF 배당 트래커</div>
+    <div class="topbar-title">ETF ë°°ë¹ í¸ëì»¤</div>
     <div class="topbar-right">
       <div class="save-dot" id="save-dot"></div>
       <span class="save-ts" id="save-ts"></span>
     </div>
   </div>
 
-  <!-- 대시보드 -->
+  <!-- ëìë³´ë -->
   <div class="panel active" id="tab-0">
     <div class="yr-row" id="dash-yrs"></div>
     <div class="kpi-strip" id="kpi-strip"></div>
     <div class="acct-row" id="acct-row"></div>
-    <div class="sec"><h2>종목별 현황</h2></div>
+    <div class="sec"><h2>ì¢ëª©ë³ íí©</h2></div>
     <div id="install-area"></div>
     <div id="dash-cards"></div>
   </div>
 
-  <!-- 보유 종목 -->
+  <!-- ë³´ì  ì¢ëª© -->
   <div class="panel" id="tab-1">
     <div style="height:10px"></div>
     <div id="holdings-cards"></div>
   </div>
 
-  <!-- 배당 내역 -->
+  <!-- ë°°ë¹ ë´ì­ -->
   <div class="panel" id="tab-2">
     <div class="yr-row" id="div-yrs"></div>
     <div id="div-cards"></div>
   </div>
 
-  <!-- 분석 -->
+  <!-- ë¶ì -->
   <div class="panel" id="tab-3">
     <div class="yr-row" id="anal-yrs"></div>
     <div id="anal-cards"></div>
@@ -219,94 +231,94 @@ select{appearance:none;-webkit-appearance:none;background-image:url("data:image/
   <nav class="bnav">
     <button class="bnav-btn active" data-tab="0" onclick="goTab(this)">
       <div class="bnav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
-      대시보드
+      ëìë³´ë
     </button>
     <button class="bnav-btn" data-tab="1" onclick="goTab(this)">
       <div class="bnav-icon"><svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg></div>
-      종목
+      ì¢ëª©
     </button>
     <button class="bnav-btn" data-tab="2" onclick="goTab(this)">
       <div class="bnav-icon"><svg viewBox="0 0 24 24"><path d="M12 2v20M2 12l10 10 10-10"/></svg></div>
-      배당내역
+      ë°°ë¹ë´ì­
     </button>
     <button class="bnav-btn" data-tab="3" onclick="goTab(this)">
       <div class="bnav-icon"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-      분석
+      ë¶ì
     </button>
   </nav>
 </div>
 
-<!-- sheet: 종목 -->
+<!-- sheet: ì¢ëª© -->
 <div class="sheet-bg" id="s-ticker">
 <div class="sheet">
   <div class="sheet-handle"></div>
-  <h2 id="ticker-title">종목 추가</h2>
+  <h2 id="ticker-title">ì¢ëª© ì¶ê°</h2>
   <div class="frow">
-    <div class="field"><label>종목코드</label><input id="t-code" placeholder="A069500" inputmode="text"></div>
-    <div class="field"><label>종목명</label><input id="t-name" placeholder="KODEX 200"></div>
+    <div class="field"><label>ì¢ëª©ì½ë</label><input id="t-code" placeholder="A069500" inputmode="text"></div>
+    <div class="field"><label>ì¢ëª©ëª</label><input id="t-name" placeholder="KODEX 200"></div>
   </div>
   <div class="frow">
-    <div class="field"><label>계좌</label>
-      <select id="t-acct"><option value="일반">일반계좌</option><option value="연금">연금계좌</option></select>
+    <div class="field"><label>ê³ì¢</label>
+      <select id="t-acct"><option value="ì¼ë°">ì¼ë°ê³ì¢</option><option value="ì°ê¸">ì°ê¸ê³ì¢</option></select>
     </div>
-    <div class="field"><label>분류</label>
+    <div class="field"><label>ë¶ë¥</label>
       <select id="t-cat">
-        <option>국내주식</option><option>해외주식</option><option>국내채권</option>
-        <option>해외채권</option><option>커버드콜</option><option>혼합</option>
+        <option>êµ­ë´ì£¼ì</option><option>í´ì¸ì£¼ì</option><option>êµ­ë´ì±ê¶</option>
+        <option>í´ì¸ì±ê¶</option><option>ì»¤ë²ëì½</option><option>í¼í©</option>
       </select>
     </div>
   </div>
   <div class="frow">
-    <div class="field"><label>보유 수량 (좌)</label><input id="t-qty" type="number" inputmode="numeric" placeholder="100"></div>
-    <div class="field"><label>평균단가 (원)</label><input id="t-cost" type="number" inputmode="decimal" placeholder="30000"></div>
+    <div class="field"><label>ë³´ì  ìë (ì¢)</label><input id="t-qty" type="number" inputmode="numeric" placeholder="100"></div>
+    <div class="field"><label>íê· ë¨ê° (ì)</label><input id="t-cost" type="number" inputmode="decimal" placeholder="30000"></div>
   </div>
-  <div class="field"><label>현재가 (원)</label><input id="t-price" type="number" inputmode="decimal" placeholder="31500"></div>
+  <div class="field"><label>íì¬ê° (ì)</label><input id="t-price" type="number" inputmode="decimal" placeholder="31500"></div>
   <div class="sfoot">
-    <button class="btn" onclick="closeSheet('s-ticker')">취소</button>
-    <button class="btn btn-p" onclick="saveTicker()">저장</button>
+    <button class="btn" onclick="closeSheet('s-ticker')">ì·¨ì</button>
+    <button class="btn btn-p" onclick="saveTicker()">ì ì¥</button>
   </div>
 </div>
 </div>
 
-<!-- sheet: 배당 입력 -->
+<!-- sheet: ë°°ë¹ ìë ¥ -->
 <div class="sheet-bg" id="s-div">
 <div class="sheet">
   <div class="sheet-handle"></div>
-  <h2>배당 입력</h2>
+  <h2>ë°°ë¹ ìë ¥</h2>
   <div class="frow">
-    <div class="field"><label>지급일</label><input id="d-date" type="date"></div>
-    <div class="field"><label>종목</label><select id="d-ticker" onchange="onTickerChange()"></select></div>
+    <div class="field"><label>ì§ê¸ì¼</label><input id="d-date" type="date"></div>
+    <div class="field"><label>ì¢ëª©</label><select id="d-ticker" onchange="onTickerChange()"></select></div>
   </div>
-  <div class="field"><label>배당 유형</label>
+  <div class="field"><label>ë°°ë¹ ì í</label>
     <select id="d-type" onchange="onTypeChange()">
-      <option value="일반">일반 배당 (15.4%)</option>
-      <option value="커버드콜">커버드콜 (과세표준 별도)</option>
-      <option value="연금">연금계좌 (과세이연)</option>
+      <option value="ì¼ë°">ì¼ë° ë°°ë¹ (15.4%)</option>
+      <option value="ì»¤ë²ëì½">ì»¤ë²ëì½ (ê³¼ì¸íì¤ ë³ë)</option>
+      <option value="ì°ê¸">ì°ê¸ê³ì¢ (ê³¼ì¸ì´ì°)</option>
     </select>
   </div>
-  <div class="cc-notice" id="cc-notice">커버드콜은 분배금 전액이 과세 대상이 아닙니다. 운용사 공시 또는 증권사 입금내역에서 <strong>과세표준 금액</strong>을 확인 후 입력하세요.</div>
+  <div class="cc-notice" id="cc-notice">ì»¤ë²ëì½ì ë¶ë°°ê¸ ì ì¡ì´ ê³¼ì¸ ëìì´ ìëëë¤. ì´ì©ì¬ ê³µì ëë ì¦ê¶ì¬ ìê¸ë´ì­ìì <strong>ê³¼ì¸íì¤ ê¸ì¡</strong>ì íì¸ í ìë ¥íì¸ì.</div>
   <div class="frow">
-    <div class="field"><label>보유 수량</label><input id="d-qty" type="number" inputmode="numeric" placeholder="100" oninput="calcDiv()"></div>
-    <div class="field"><label>1좌당 분배금 (원)</label><input id="d-per" type="number" inputmode="decimal" placeholder="200" oninput="calcDiv()"></div>
+    <div class="field"><label>ë³´ì  ìë</label><input id="d-qty" type="number" inputmode="numeric" placeholder="100" oninput="calcDiv()"></div>
+    <div class="field"><label>1ì¢ë¹ ë¶ë°°ê¸ (ì)</label><input id="d-per" type="number" inputmode="decimal" placeholder="200" oninput="calcDiv()"></div>
   </div>
   <div class="field" id="taxbase-wrap">
-    <label>과세표준 금액 (원) <span style="font-size:10px;color:var(--text3)">커버드콜만</span></label>
-    <input id="d-taxbase" type="number" inputmode="decimal" placeholder="세전 분배금 중 과세 대상 금액" oninput="calcDiv()">
+    <label>ê³¼ì¸íì¤ ê¸ì¡ (ì) <span style="font-size:10px;color:var(--text3)">ì»¤ë²ëì½ë§</span></label>
+    <input id="d-taxbase" type="number" inputmode="decimal" placeholder="ì¸ì  ë¶ë°°ê¸ ì¤ ê³¼ì¸ ëì ê¸ì¡" oninput="calcDiv()">
     <span class="help" id="taxbase-help"></span>
   </div>
   <div class="calc-box">
-    <div class="calc-item"><label>세전 수령</label><div class="cv" id="c-gross">—</div></div>
-    <div class="calc-item"><label>원천징수 <span id="c-rate" style="font-size:9px;color:var(--text3)"></span></label><div class="cv neg" id="c-tax">—</div></div>
-    <div class="calc-item"><label>세후 수령</label><div class="cv pos" id="c-net">—</div></div>
+    <div class="calc-item"><label>ì¸ì  ìë ¹</label><div class="cv" id="c-gross">â</div></div>
+    <div class="calc-item"><label>ìì²ì§ì <span id="c-rate" style="font-size:9px;color:var(--text3)"></span></label><div class="cv neg" id="c-tax">â</div></div>
+    <div class="calc-item"><label>ì¸í ìë ¹</label><div class="cv pos" id="c-net">â</div></div>
   </div>
   <div class="effrate" id="c-effrate"></div>
   <div class="frow">
-    <div class="field"><label>기준가 (선택)</label><input id="d-baseprice" type="number" inputmode="decimal" placeholder="시가배당률 계산용"></div>
-    <div class="field"><label>메모</label><input id="d-memo" placeholder="예: 1Q, 월배당"></div>
+    <div class="field"><label>ê¸°ì¤ê° (ì í)</label><input id="d-baseprice" type="number" inputmode="decimal" placeholder="ìê°ë°°ë¹ë¥  ê³ì°ì©"></div>
+    <div class="field"><label>ë©ëª¨</label><input id="d-memo" placeholder="ì: 1Q, ìë°°ë¹"></div>
   </div>
   <div class="sfoot">
-    <button class="btn" onclick="closeSheet('s-div')">취소</button>
-    <button class="btn btn-p" onclick="saveDividend()">저장</button>
+    <button class="btn" onclick="closeSheet('s-div')">ì·¨ì</button>
+    <button class="btn btn-p" onclick="saveDividend()">ì ì¥</button>
   </div>
 </div>
 </div>
@@ -316,7 +328,7 @@ const SK_T='etf_tickers', SK_D='etf_dividends', SK_TS='etf_saved_ts';
 let T=[], D=[], selYear=new Date().getFullYear(), tEditIdx=-1, curTab=0;
 let deferredPrompt=null;
 
-/* ── PWA install prompt ── */
+/* ââ PWA install prompt ââ */
 window.addEventListener('beforeinstallprompt', e=>{
   e.preventDefault(); deferredPrompt=e; showInstallBanner();
 });
@@ -324,8 +336,8 @@ function showInstallBanner(){
   const area=document.getElementById('install-area');
   if(!area||area.innerHTML) return;
   area.innerHTML=`<div class="install-banner">
-    <p>홈 화면에 앱으로 추가하면<br>더 편리하게 사용할 수 있어요</p>
-    <button onclick="installApp()">홈에 추가</button>
+    <p>í íë©´ì ì±ì¼ë¡ ì¶ê°íë©´<br>ë í¸ë¦¬íê² ì¬ì©í  ì ìì´ì</p>
+    <button onclick="installApp()">íì ì¶ê°</button>
   </div>`;
 }
 async function installApp(){
@@ -336,7 +348,7 @@ async function installApp(){
   deferredPrompt=null;
 }
 
-/* ── storage ── */
+/* ââ storage ââ */
 function persist(){
   try{
     localStorage.setItem(SK_T, JSON.stringify(T));
@@ -344,57 +356,57 @@ function persist(){
     const ts=Date.now();
     localStorage.setItem(SK_TS, ts);
     flashSave(ts);
-  }catch(e){ alert('저장 실패: 저장 공간을 확인해주세요'); }
+  }catch(e){ alert('ì ì¥ ì¤í¨: ì ì¥ ê³µê°ì íì¸í´ì£¼ì¸ì'); }
 }
 function hydrate(){
-  try{
-    const rt=localStorage.getItem(SK_T);
-    const rd=localStorage.getItem(SK_D);
-    const ts=localStorage.getItem(SK_TS);
-    if(rt) T=JSON.parse(rt);
-    if(rd) D=JSON.parse(rd);
-    if(ts) document.getElementById('save-ts').textContent=
-      new Date(+ts).toLocaleDateString('ko-KR',{month:'short',day:'numeric'});
-  }catch(e){}
-  if(!T.length&&!D.length) seed();
-  document.getElementById('loader').style.display='none';
-  renderAll();
+  let first=true;
+  async function run(){
+    if(window.firebaseHydrate){
+      const data=await window.firebaseHydrate();
+      if(data&&(data.tickers.length||data.dividends.length)){T=data.tickers;D=data.dividends;if(data.updatedAt)document.getElementById('save-ts').textContent=new Date(data.updatedAt).toLocaleDateString('ko-KR',{month:'short',day:'numeric'});}
+      else{try{const rt=localStorage.getItem(SK_T),rd=localStorage.getItem(SK_D);if(rt)T=JSON.parse(rt);if(rd)D=JSON.parse(rd);}catch(e){}if(!T.length&&!D.length)seed();}
+      first=false;
+      if(window.firebaseListen)window.firebaseListen((d)=>{if(!first)return;T=d.tickers||[];D=d.dividends||[];if(d.updatedAt)document.getElementById('save-ts').textContent=new Date(d.updatedAt).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})+' 동기화';renderAll();});
+    }else{try{const rt=localStorage.getItem(SK_T),rd=localStorage.getItem(SK_D),ts=localStorage.getItem(SK_TS);if(rt)T=JSON.parse(rt);if(rd)D=JSON.parse(rd);if(ts)document.getElementById('save-ts').textContent=new Date(+ts).toLocaleDateString('ko-KR',{month:'short',day:'numeric'});}catch(e){}if(!T.length&&!D.length)seed();}
+    document.getElementById('loader').style.display='none';renderAll();
+  }
+  if(window._firebaseReady){run();}else{document.addEventListener('firebase-ready',run);setTimeout(()=>{if(!document.getElementById('loader').style.display)run();},3000);}
 }
 function flashSave(ts){
   const d=document.getElementById('save-dot');
   d.classList.add('on');
   document.getElementById('save-ts').textContent=
-    new Date(ts).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+    '☁ '+new Date(ts).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
   setTimeout(()=>d.classList.remove('on'),2500);
 }
 
-/* ── seed demo ── */
+/* ââ seed demo ââ */
 function seed(){
   T=[
-    {code:'A069500',name:'KODEX 200',acct:'일반',cat:'국내주식',qty:100,cost:30000,price:32500},
-    {code:'A360750',name:'TIGER 미국S&P500',acct:'연금',cat:'해외주식',qty:50,cost:15000,price:15800},
-    {code:'A432360',name:'TIGER 200커버드콜ATM',acct:'일반',cat:'커버드콜',qty:200,cost:5000,price:5200},
-    {code:'A114260',name:'KODEX 국고채10년',acct:'연금',cat:'국내채권',qty:150,cost:10000,price:10300},
+    {code:'A069500',name:'KODEX 200',acct:'ì¼ë°',cat:'êµ­ë´ì£¼ì',qty:100,cost:30000,price:32500},
+    {code:'A360750',name:'TIGER ë¯¸êµ­S&P500',acct:'ì°ê¸',cat:'í´ì¸ì£¼ì',qty:50,cost:15000,price:15800},
+    {code:'A432360',name:'TIGER 200ì»¤ë²ëì½ATM',acct:'ì¼ë°',cat:'ì»¤ë²ëì½',qty:200,cost:5000,price:5200},
+    {code:'A114260',name:'KODEX êµ­ê³ ì±10ë',acct:'ì°ê¸',cat:'êµ­ë´ì±ê¶',qty:150,cost:10000,price:10300},
   ];
   const y=new Date().getFullYear();
   D=[
-    {date:`${y}-03-20`,ti:0,type:'일반',qty:100,perDiv:200,taxBase:null,gross:20000,tax:3080,net:16920,memo:'1Q'},
-    {date:`${y}-06-20`,ti:0,type:'일반',qty:100,perDiv:215,taxBase:null,gross:21500,tax:3311,net:18189,memo:'2Q'},
-    {date:`${y}-09-20`,ti:0,type:'일반',qty:100,perDiv:208,taxBase:null,gross:20800,tax:3203,net:17597,memo:'3Q'},
-    {date:`${y}-03-25`,ti:1,type:'연금',qty:50,perDiv:180,taxBase:null,gross:9000,tax:0,net:9000,memo:'상반기'},
-    {date:`${y}-09-25`,ti:1,type:'연금',qty:50,perDiv:192,taxBase:null,gross:9600,tax:0,net:9600,memo:'하반기'},
-    {date:`${y}-05-25`,ti:2,type:'커버드콜',qty:200,perDiv:300,taxBase:18000,gross:60000,tax:2772,net:57228,memo:'월배당'},
-    {date:`${y}-06-25`,ti:2,type:'커버드콜',qty:200,perDiv:310,taxBase:19000,gross:62000,tax:2926,net:59074,memo:'월배당'},
-    {date:`${y}-07-25`,ti:2,type:'커버드콜',qty:200,perDiv:295,taxBase:17500,gross:59000,tax:2695,net:56305,memo:'월배당'},
+    {date:`${y}-03-20`,ti:0,type:'ì¼ë°',qty:100,perDiv:200,taxBase:null,gross:20000,tax:3080,net:16920,memo:'1Q'},
+    {date:`${y}-06-20`,ti:0,type:'ì¼ë°',qty:100,perDiv:215,taxBase:null,gross:21500,tax:3311,net:18189,memo:'2Q'},
+    {date:`${y}-09-20`,ti:0,type:'ì¼ë°',qty:100,perDiv:208,taxBase:null,gross:20800,tax:3203,net:17597,memo:'3Q'},
+    {date:`${y}-03-25`,ti:1,type:'ì°ê¸',qty:50,perDiv:180,taxBase:null,gross:9000,tax:0,net:9000,memo:'ìë°ê¸°'},
+    {date:`${y}-09-25`,ti:1,type:'ì°ê¸',qty:50,perDiv:192,taxBase:null,gross:9600,tax:0,net:9600,memo:'íë°ê¸°'},
+    {date:`${y}-05-25`,ti:2,type:'ì»¤ë²ëì½',qty:200,perDiv:300,taxBase:18000,gross:60000,tax:2772,net:57228,memo:'ìë°°ë¹'},
+    {date:`${y}-06-25`,ti:2,type:'ì»¤ë²ëì½',qty:200,perDiv:310,taxBase:19000,gross:62000,tax:2926,net:59074,memo:'ìë°°ë¹'},
+    {date:`${y}-07-25`,ti:2,type:'ì»¤ë²ëì½',qty:200,perDiv:295,taxBase:17500,gross:59000,tax:2695,net:56305,memo:'ìë°°ë¹'},
   ];
 }
 
-/* ── formatters ── */
-const won=n=>n==null?'—':Math.round(n).toLocaleString('ko-KR')+'원';
-const pct=n=>n==null?'—':(n*100).toFixed(2)+'%';
+/* ââ formatters ââ */
+const won=n=>n==null?'â':Math.round(n).toLocaleString('ko-KR')+'ì';
+const pct=n=>n==null?'â':(n*100).toFixed(2)+'%';
 const cc=()=>`<span class="tag-cc">CC</span>`;
 
-/* ── years ── */
+/* ââ years ââ */
 function getYears(){
   const s=new Set(D.map(d=>+d.date.split('-')[0]));
   s.add(new Date().getFullYear());
@@ -409,7 +421,7 @@ function setDY(y){selYear=y;renderDashboard();yrPills('dash-yrs',y,'setDY');}
 function setDivY(y){selYear=y;renderDivLog();yrPills('div-yrs',y,'setDivY');}
 function setAnY(y){selYear=y;renderAnalysis();yrPills('anal-yrs',y,'setAnY');}
 
-/* ── tab nav ── */
+/* ââ tab nav ââ */
 function goTab(el){
   curTab=+el.dataset.tab;
   document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.toggle('active',b===el));
@@ -418,14 +430,14 @@ function goTab(el){
 }
 function onFab(){curTab===1?openTicker(-1):openDiv();}
 
-/* ── sheets ── */
+/* ââ sheets ââ */
 function openSheet(id){document.getElementById(id).classList.add('open');}
 function closeSheet(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll('.sheet-bg').forEach(bg=>{
   bg.addEventListener('click',e=>{if(e.target===bg) bg.classList.remove('open');});
 });
 
-/* ── render all ── */
+/* ââ render all ââ */
 function renderAll(){
   yrPills('dash-yrs',selYear,'setDY');
   yrPills('div-yrs',selYear,'setDivY');
@@ -433,7 +445,7 @@ function renderAll(){
   renderDashboard(); renderHoldings(); renderDivLog(); renderAnalysis();
 }
 
-/* ── dashboard ── */
+/* ââ dashboard ââ */
 function renderDashboard(){
   const yd=D.filter(d=>+d.date.split('-')[0]===selYear);
   const inv=T.reduce((s,t)=>s+t.qty*t.cost,0);
@@ -443,19 +455,19 @@ function renderDashboard(){
   const yoc=inv>0?net/inv:null;
   const mkt=ev>0?gross/ev:null;
   document.getElementById('kpi-strip').innerHTML=`
-    <div class="kpi"><div class="kpi-label">총 투자원금</div><div class="kpi-val">${won(inv)}</div><div class="kpi-sub">${T.length}종목</div></div>
-    <div class="kpi"><div class="kpi-label">세후 배당 (${selYear})</div><div class="kpi-val pos">${won(net)}</div><div class="kpi-sub">세전 ${won(gross)}</div></div>
-    <div class="kpi"><div class="kpi-label">YOC — 세후배당률</div><div class="kpi-val ${yoc&&yoc>0.04?'pos':''}">${pct(yoc)}</div><div class="kpi-sub">내 원금 기준</div></div>
-    <div class="kpi"><div class="kpi-label">시가배당률</div><div class="kpi-val">${pct(mkt)}</div><div class="kpi-sub">평가금액 기준</div></div>
-    <div class="kpi"><div class="kpi-label">월 환산 세후</div><div class="kpi-val">${won(net/12)}</div><div class="kpi-sub">연간 ÷ 12</div></div>
+    <div class="kpi"><div class="kpi-label">ì´ í¬ììê¸</div><div class="kpi-val">${won(inv)}</div><div class="kpi-sub">${T.length}ì¢ëª©</div></div>
+    <div class="kpi"><div class="kpi-label">ì¸í ë°°ë¹ (${selYear})</div><div class="kpi-val pos">${won(net)}</div><div class="kpi-sub">ì¸ì  ${won(gross)}</div></div>
+    <div class="kpi"><div class="kpi-label">YOC â ì¸íë°°ë¹ë¥ </div><div class="kpi-val ${yoc&&yoc>0.04?'pos':''}">${pct(yoc)}</div><div class="kpi-sub">ë´ ìê¸ ê¸°ì¤</div></div>
+    <div class="kpi"><div class="kpi-label">ìê°ë°°ë¹ë¥ </div><div class="kpi-val">${pct(mkt)}</div><div class="kpi-sub">íê°ê¸ì¡ ê¸°ì¤</div></div>
+    <div class="kpi"><div class="kpi-label">ì íì° ì¸í</div><div class="kpi-val">${won(net/12)}</div><div class="kpi-sub">ì°ê° Ã· 12</div></div>
   `;
-  const gI=T.filter(t=>t.acct==='일반').reduce((s,t)=>s+t.qty*t.cost,0);
-  const pI=T.filter(t=>t.acct==='연금').reduce((s,t)=>s+t.qty*t.cost,0);
-  const gN=yd.filter(d=>T[d.ti]?.acct==='일반').reduce((s,d)=>s+d.net,0);
-  const pN=yd.filter(d=>T[d.ti]?.acct==='연금').reduce((s,d)=>s+d.net,0);
+  const gI=T.filter(t=>t.acct==='ì¼ë°').reduce((s,t)=>s+t.qty*t.cost,0);
+  const pI=T.filter(t=>t.acct==='ì°ê¸').reduce((s,t)=>s+t.qty*t.cost,0);
+  const gN=yd.filter(d=>T[d.ti]?.acct==='ì¼ë°').reduce((s,d)=>s+d.net,0);
+  const pN=yd.filter(d=>T[d.ti]?.acct==='ì°ê¸').reduce((s,d)=>s+d.net,0);
   document.getElementById('acct-row').innerHTML=`
-    <div class="acct-box"><h3>일반계좌</h3><div class="av">${won(gN)}</div><div class="as">원금 ${won(gI)} · YOC ${gI>0?pct(gN/gI):'—'}</div></div>
-    <div class="acct-box"><h3>연금계좌</h3><div class="av">${won(pN)}</div><div class="as">원금 ${won(pI)} · 과세이연</div></div>
+    <div class="acct-box"><h3>ì¼ë°ê³ì¢</h3><div class="av">${won(gN)}</div><div class="as">ìê¸ ${won(gI)} Â· YOC ${gI>0?pct(gN/gI):'â'}</div></div>
+    <div class="acct-box"><h3>ì°ê¸ê³ì¢</h3><div class="av">${won(pN)}</div><div class="as">ìê¸ ${won(pI)} Â· ê³¼ì¸ì´ì°</div></div>
   `;
   document.getElementById('dash-cards').innerHTML=T.map((t,i)=>{
     const td=yd.filter(d=>d.ti===i);
@@ -464,20 +476,20 @@ function renderDashboard(){
     const inv2=t.qty*t.cost, ev2=t.qty*t.price;
     return `<div class="ccard">
       <div class="ccard-head">
-        <div><div class="ccard-name">${t.name}${t.cat==='커버드콜'?cc():''}</div></div>
-        <span class="badge ${t.acct==='일반'?'bg':'bp'}">${t.acct}</span>
+        <div><div class="ccard-name">${t.name}${t.cat==='ì»¤ë²ëì½'?cc():''}</div></div>
+        <span class="badge ${t.acct==='ì¼ë°'?'bg':'bp'}">${t.acct}</span>
       </div>
       <div class="ccard-body">
-        <div class="ci"><label>세후 배당</label><div class="cv pos">${won(n)}</div></div>
-        <div class="ci"><label>YOC (세후)</label><div class="cv">${pct(inv2>0?n/inv2:null)}</div></div>
-        <div class="ci"><label>시가배당률</label><div class="cv">${pct(ev2>0?g/ev2:null)}</div></div>
-        <div class="ci"><label>월 환산</label><div class="cv muted">${won(n/12)}</div></div>
+        <div class="ci"><label>ì¸í ë°°ë¹</label><div class="cv pos">${won(n)}</div></div>
+        <div class="ci"><label>YOC (ì¸í)</label><div class="cv">${pct(inv2>0?n/inv2:null)}</div></div>
+        <div class="ci"><label>ìê°ë°°ë¹ë¥ </label><div class="cv">${pct(ev2>0?g/ev2:null)}</div></div>
+        <div class="ci"><label>ì íì°</label><div class="cv muted">${won(n/12)}</div></div>
       </div>
     </div>`;
-  }).join('')||`<div class="empty">종목 탭에서<br>종목을 추가해주세요</div>`;
+  }).join('')||`<div class="empty">ì¢ëª© í­ìì<br>ì¢ëª©ì ì¶ê°í´ì£¼ì¸ì</div>`;
 }
 
-/* ── holdings ── */
+/* ââ holdings ââ */
 function renderHoldings(){
   document.getElementById('holdings-cards').innerHTML=T.map((t,i)=>{
     const inv=t.qty*t.cost, ev=t.qty*t.price;
@@ -485,53 +497,53 @@ function renderHoldings(){
     return `<div class="ccard">
       <div class="ccard-head">
         <div>
-          <div class="ccard-name">${t.name}${t.cat==='커버드콜'?cc():''}</div>
-          <div class="ccard-sub">${t.code} · ${t.cat}</div>
+          <div class="ccard-name">${t.name}${t.cat==='ì»¤ë²ëì½'?cc():''}</div>
+          <div class="ccard-sub">${t.code} Â· ${t.cat}</div>
         </div>
-        <span class="badge ${t.acct==='일반'?'bg':'bp'}">${t.acct}</span>
+        <span class="badge ${t.acct==='ì¼ë°'?'bg':'bp'}">${t.acct}</span>
       </div>
       <div class="ccard-body">
-        <div class="ci"><label>보유 수량</label><div class="cv">${t.qty.toLocaleString()}좌</div></div>
-        <div class="ci"><label>평균단가</label><div class="cv">${won(t.cost)}</div></div>
-        <div class="ci"><label>투자원금</label><div class="cv">${won(inv)}</div></div>
-        <div class="ci"><label>현재가</label><div class="cv">${won(t.price)}<br><span class="${pnl>=0?'pos':'neg'}" style="font-size:11px">${pnl>=0?'+':''}${pct(pp)}</span></div></div>
+        <div class="ci"><label>ë³´ì  ìë</label><div class="cv">${t.qty.toLocaleString()}ì¢</div></div>
+        <div class="ci"><label>íê· ë¨ê°</label><div class="cv">${won(t.cost)}</div></div>
+        <div class="ci"><label>í¬ììê¸</label><div class="cv">${won(inv)}</div></div>
+        <div class="ci"><label>íì¬ê°</label><div class="cv">${won(t.price)}<br><span class="${pnl>=0?'pos':'neg'}" style="font-size:11px">${pnl>=0?'+':''}${pct(pp)}</span></div></div>
       </div>
       <div class="ccard-foot">
-        <button onclick="openTicker(${i})">수정</button>
-        <button class="del" onclick="delTicker(${i})">삭제</button>
+        <button onclick="openTicker(${i})">ìì </button>
+        <button class="del" onclick="delTicker(${i})">ì­ì </button>
       </div>
     </div>`;
-  }).join('')||`<div class="empty">+ 버튼으로<br>종목을 추가하세요</div>`;
+  }).join('')||`<div class="empty">+ ë²í¼ì¼ë¡<br>ì¢ëª©ì ì¶ê°íì¸ì</div>`;
 }
 
-/* ── divlog ── */
+/* ââ divlog ââ */
 function renderDivLog(){
   const yd=[...D].filter(d=>+d.date.split('-')[0]===selYear).sort((a,b)=>b.date.localeCompare(a.date));
   document.getElementById('div-cards').innerHTML=yd.map(d=>{
     const t=T[d.ti];
     const eff=d.gross>0?d.tax/d.gross:0;
-    const isCC=d.type==='커버드콜';
+    const isCC=d.type==='ì»¤ë²ëì½';
     return `<div class="dcard">
       <div class="dcard-top">
         <div>
-          <div class="dcard-name">${t?t.name:'(삭제됨)'}${isCC?cc():''}</div>
+          <div class="dcard-name">${t?t.name:'(ì­ì ë¨)'}${isCC?cc():''}</div>
           <div class="dcard-meta">
-            <span class="badge ${t?.acct==='일반'?'bg':t?.acct==='연금'?'bp':''}">${t?.acct||'—'}</span>
+            <span class="badge ${t?.acct==='ì¼ë°'?'bg':t?.acct==='ì°ê¸'?'bp':''}">${t?.acct||'â'}</span>
             ${d.memo?`<span style="font-size:11px;color:var(--text3)">${d.memo}</span>`:''}
           </div>
         </div>
         <span style="font-size:12px;color:var(--text3)">${d.date}</span>
       </div>
-      <div class="dcard-row"><label>세전 분배금</label><span class="val">${won(d.gross)}</span></div>
-      ${isCC&&d.taxBase?`<div class="dcard-row"><label>과세표준</label><span class="val muted">${won(d.taxBase)}</span></div>`:''}
-      <div class="dcard-row"><label>원천징수 (${d.type==='연금'?'이연':(eff*100).toFixed(1)+'%'})</label><span class="val neg">${d.type==='연금'?'0원':won(d.tax)}</span></div>
-      <div class="dcard-row"><label>세후 실수령</label><span class="val pos">${won(d.net)}</span></div>
-      <div class="dcard-del"><button onclick="delDiv('${d.date}',${d.ti},${d.gross},'${d.memo||''}')">삭제</button></div>
+      <div class="dcard-row"><label>ì¸ì  ë¶ë°°ê¸</label><span class="val">${won(d.gross)}</span></div>
+      ${isCC&&d.taxBase?`<div class="dcard-row"><label>ê³¼ì¸íì¤</label><span class="val muted">${won(d.taxBase)}</span></div>`:''}
+      <div class="dcard-row"><label>ìì²ì§ì (${d.type==='ì°ê¸'?'ì´ì°':(eff*100).toFixed(1)+'%'})</label><span class="val neg">${d.type==='ì°ê¸'?'0ì':won(d.tax)}</span></div>
+      <div class="dcard-row"><label>ì¸í ì¤ìë ¹</label><span class="val pos">${won(d.net)}</span></div>
+      <div class="dcard-del"><button onclick="delDiv('${d.date}',${d.ti},${d.gross},'${d.memo||''}')">ì­ì </button></div>
     </div>`;
-  }).join('')||`<div class="empty">이 연도의<br>배당 내역이 없습니다</div>`;
+  }).join('')||`<div class="empty">ì´ ì°ëì<br>ë°°ë¹ ë´ì­ì´ ììµëë¤</div>`;
 }
 
-/* ── analysis ── */
+/* ââ analysis ââ */
 function renderAnalysis(){
   const yd=D.filter(d=>+d.date.split('-')[0]===selYear);
   let tG=0,tN=0,tI=0,tE=0;
@@ -543,31 +555,31 @@ function renderAnalysis(){
     tG+=g;tN+=n;tI+=inv;tE+=ev;
     return `<div class="ccard">
       <div class="ccard-head">
-        <span class="ccard-name">${t.name}${t.cat==='커버드콜'?cc():''}</span>
-        <span class="badge ${t.acct==='일반'?'bg':'bp'}">${t.acct}</span>
+        <span class="ccard-name">${t.name}${t.cat==='ì»¤ë²ëì½'?cc():''}</span>
+        <span class="badge ${t.acct==='ì¼ë°'?'bg':'bp'}">${t.acct}</span>
       </div>
       <div class="ccard-body">
-        <div class="ci"><label>배당 횟수</label><div class="cv">${td.length}회</div></div>
-        <div class="ci"><label>월 환산</label><div class="cv muted">${won(n/12)}</div></div>
-        <div class="ci"><label>세전 연간</label><div class="cv">${won(g)}</div></div>
-        <div class="ci"><label>세후 연간</label><div class="cv pos">${won(n)}</div></div>
-        <div class="ci"><label>YOC (세후)</label><div class="cv" style="font-weight:600">${pct(inv>0?n/inv:null)}</div></div>
-        <div class="ci"><label>시가배당률</label><div class="cv">${pct(ev>0?g/ev:null)}</div></div>
+        <div class="ci"><label>ë°°ë¹ íì</label><div class="cv">${td.length}í</div></div>
+        <div class="ci"><label>ì íì°</label><div class="cv muted">${won(n/12)}</div></div>
+        <div class="ci"><label>ì¸ì  ì°ê°</label><div class="cv">${won(g)}</div></div>
+        <div class="ci"><label>ì¸í ì°ê°</label><div class="cv pos">${won(n)}</div></div>
+        <div class="ci"><label>YOC (ì¸í)</label><div class="cv" style="font-weight:600">${pct(inv>0?n/inv:null)}</div></div>
+        <div class="ci"><label>ìê°ë°°ë¹ë¥ </label><div class="cv">${pct(ev>0?g/ev:null)}</div></div>
       </div>
     </div>`;
-  }).join('')||`<div class="empty">데이터 없음</div>`;
+  }).join('')||`<div class="empty">ë°ì´í° ìì</div>`;
   document.getElementById('total-bar').innerHTML=`
-    <div class="ti"><label>세후 연간 합계</label><div class="tv pos">${won(tN)}</div></div>
-    <div class="ti"><label>YOC (전체)</label><div class="tv" style="font-weight:600">${pct(tI>0?tN/tI:null)}</div></div>
-    <div class="ti"><label>월 환산</label><div class="tv">${won(tN/12)}</div></div>
+    <div class="ti"><label>ì¸í ì°ê° í©ê³</label><div class="tv pos">${won(tN)}</div></div>
+    <div class="ti"><label>YOC (ì ì²´)</label><div class="tv" style="font-weight:600">${pct(tI>0?tN/tI:null)}</div></div>
+    <div class="ti"><label>ì íì°</label><div class="tv">${won(tN/12)}</div></div>
   `;
 }
 
-/* ── ticker ── */
+/* ââ ticker ââ */
 function openTicker(idx){
   tEditIdx=idx;
-  document.getElementById('ticker-title').textContent=idx===-1?'종목 추가':'종목 수정';
-  const t=idx>=0?T[idx]:{code:'',name:'',acct:'일반',cat:'국내주식',qty:'',cost:'',price:''};
+  document.getElementById('ticker-title').textContent=idx===-1?'ì¢ëª© ì¶ê°':'ì¢ëª© ìì ';
+  const t=idx>=0?T[idx]:{code:'',name:'',acct:'ì¼ë°',cat:'êµ­ë´ì£¼ì',qty:'',cost:'',price:''};
   document.getElementById('t-code').value=t.code;
   document.getElementById('t-name').value=t.name;
   document.getElementById('t-acct').value=t.acct;
@@ -587,16 +599,16 @@ function saveTicker(){
     cost:parseFloat(document.getElementById('t-cost').value)||0,
     price:parseFloat(document.getElementById('t-price').value)||0,
   };
-  if(!t.name){alert('종목명을 입력하세요');return;}
+  if(!t.name){alert('ì¢ëª©ëªì ìë ¥íì¸ì');return;}
   if(tEditIdx>=0) T[tEditIdx]=t; else T.push(t);
   persist(); closeSheet('s-ticker'); renderAll();
 }
 function delTicker(i){
-  if(!confirm(`"${T[i].name}" 삭제할까요?`))return;
+  if(!confirm(`"${T[i].name}" ì­ì í ê¹ì?`))return;
   T.splice(i,1); persist(); renderAll();
 }
 
-/* ── dividend ── */
+/* ââ dividend ââ */
 function openDiv(){
   document.getElementById('d-ticker').innerHTML=T.map((t,i)=>
     `<option value="${i}">${t.name}</option>`
@@ -610,19 +622,19 @@ function onTickerChange(){
   const t=T[i]; if(!t)return;
   document.getElementById('d-qty').value=t.qty;
   document.getElementById('d-type').value=
-    t.cat==='커버드콜'?'커버드콜':t.acct==='연금'?'연금':'일반';
+    t.cat==='ì»¤ë²ëì½'?'ì»¤ë²ëì½':t.acct==='ì°ê¸'?'ì°ê¸':'ì¼ë°';
   onTypeChange(); calcDiv();
 }
 function onTypeChange(){
   const type=document.getElementById('d-type').value;
-  const isCC=type==='커버드콜';
+  const isCC=type==='ì»¤ë²ëì½';
   document.getElementById('cc-notice').style.display=isCC?'block':'none';
   const w=document.getElementById('taxbase-wrap');
   w.style.opacity=isCC?'1':'0.45';
   w.style.pointerEvents=isCC?'auto':'none';
   document.getElementById('taxbase-help').textContent=
-    type==='연금'?'연금계좌: 수령 시 연금소득세 (지금은 0%)':
-    isCC?'운용사 공시 또는 증권사 배당 입금내역 확인':'전체 분배금에 15.4% 자동 적용';
+    type==='ì°ê¸'?'ì°ê¸ê³ì¢: ìë ¹ ì ì°ê¸ìëì¸ (ì§ê¸ì 0%)':
+    isCC?'ì´ì©ì¬ ê³µì ëë ì¦ê¶ì¬ ë°°ë¹ ìê¸ë´ì­ íì¸':'ì ì²´ ë¶ë°°ê¸ì 15.4% ìë ì ì©';
   calcDiv();
 }
 function calcDiv(){
@@ -632,16 +644,16 @@ function calcDiv(){
   const tb=parseFloat(document.getElementById('d-taxbase').value)||null;
   const gross=qty*per;
   let tax=0,net=0;
-  if(type==='연금'){tax=0;net=gross;}
-  else if(type==='커버드콜'){tax=Math.round((tb||0)*0.154);net=gross-tax;}
+  if(type==='ì°ê¸'){tax=0;net=gross;}
+  else if(type==='ì»¤ë²ëì½'){tax=Math.round((tb||0)*0.154);net=gross-tax;}
   else{tax=Math.round(gross*0.154);net=gross-tax;}
-  document.getElementById('c-gross').textContent=gross>0?won(gross):'—';
-  document.getElementById('c-tax').textContent=gross>0?won(tax):type==='연금'?'0원':'—';
-  document.getElementById('c-net').textContent=gross>0?won(net):'—';
+  document.getElementById('c-gross').textContent=gross>0?won(gross):'â';
+  document.getElementById('c-tax').textContent=gross>0?won(tax):type==='ì°ê¸'?'0ì':'â';
+  document.getElementById('c-net').textContent=gross>0?won(net):'â';
   const eff=gross>0&&tax>0?tax/gross:null;
-  document.getElementById('c-rate').textContent=type==='연금'?'이연':eff?`실효 ${(eff*100).toFixed(1)}%`:'';
+  document.getElementById('c-rate').textContent=type==='ì°ê¸'?'ì´ì°':eff?`ì¤í¨ ${(eff*100).toFixed(1)}%`:'';
   document.getElementById('c-effrate').textContent=
-    (type==='커버드콜'&&tb&&gross>0)?`과세표준 ${won(tb)} ÷ 세전 ${won(gross)} = 실효 ${(tax/gross*100).toFixed(1)}%`:'';
+    (type==='ì»¤ë²ëì½'&&tb&&gross>0)?`ê³¼ì¸íì¤ ${won(tb)} Ã· ì¸ì  ${won(gross)} = ì¤í¨ ${(tax/gross*100).toFixed(1)}%`:'';
 }
 function saveDividend(){
   const date=document.getElementById('d-date').value;
@@ -651,17 +663,17 @@ function saveDividend(){
   const per=parseFloat(document.getElementById('d-per').value)||0;
   const tb=parseFloat(document.getElementById('d-taxbase').value)||null;
   const memo=document.getElementById('d-memo').value.trim();
-  if(!date||!per||!qty){alert('지급일, 분배금, 수량을 입력하세요');return;}
+  if(!date||!per||!qty){alert('ì§ê¸ì¼, ë¶ë°°ê¸, ìëì ìë ¥íì¸ì');return;}
   const gross=qty*per;
   let tax=0,net=0;
-  if(type==='연금'){tax=0;net=gross;}
-  else if(type==='커버드콜'){tax=Math.round((tb||0)*0.154);net=gross-tax;}
+  if(type==='ì°ê¸'){tax=0;net=gross;}
+  else if(type==='ì»¤ë²ëì½'){tax=Math.round((tb||0)*0.154);net=gross-tax;}
   else{tax=Math.round(gross*0.154);net=gross-tax;}
   D.push({date,ti,type,qty,perDiv:per,taxBase:tb,gross,tax,net,memo});
   persist(); closeSheet('s-div'); renderAll();
 }
 function delDiv(date,ti,gross,memo){
-  if(!confirm('이 배당 내역을 삭제할까요?'))return;
+  if(!confirm('ì´ ë°°ë¹ ë´ì­ì ì­ì í ê¹ì?'))return;
   const idx=D.findIndex(d=>d.date===date&&d.ti===ti&&d.gross===gross&&d.memo===memo);
   if(idx>=0){D.splice(idx,1);persist();renderAll();}
 }
