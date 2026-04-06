@@ -724,47 +724,61 @@ function openTicker(idx){
   document.getElementById('t-price').value=t.price||'';
   openSheet('s-ticker');
 }
+/* ── 주요 ETF 종목 코드→이름 내장 DB ── */
+const ETF_DB = {"069500":"KODEX 200","069660":"KODEX 코스피100","091160":"KODEX 반도체","091170":"KODEX 은행","091220":"TIGER 은행","102110":"TIGER 200","104530":"KODEX 바이오","114800":"KODEX 인버스","122630":"KODEX 레버리지","130680":"TIGER 원유선물Enhanced(H)","130730":"KODEX 모멘텀","132030":"KODEX 골드선물","133690":"KODEX 나스닥100","139220":"TIGER 200","143850":"KODEX 미국달러선물","148020":"KODEX 코스닥150레버리지","148070":"KOSEF 200TR","157490":"TIGER 소프트웨어","157500":"TIGER 반도체","169950":"KINDEX 미국WideMoat가치주","176950":"TIGER 코스피","195930":"KODEX 선진국MSCI World","219390":"TIGER 코스닥150","226490":"KODEX KOSPI","228790":"TIGER 화장품","228810":"TIGER 화학","229200":"KODEX 코스닥150","232080":"TIGER 여행레저","233740":"KODEX 코스닥150선물인버스","243890":"TIGER 미국나스닥100커버드콜","251350":"TIGER 크루드오일선물","252670":"KODEX 200선물인버스2X","261220":"KODEX WTI원유선물(H)","266410":"TIGER 코스닥150레버리지","269530":"HANARO 200","272570":"KODEX 단기채권PLUS","278540":"KODEX MSCI Korea TR","280930":"TIGER 미국MSCI리츠부동산(합성H)","305080":"KODEX 200미국채혼합","305470":"TIGER K게임","305540":"TIGER 미국채10년선물","308620":"KODEX 미국채30년선물","329200":"KODEX 금현물","329750":"TIGER 금은선물(H)","360200":"TIGER 미국S&P500","360750":"TIGER 미국나스닥100","364970":"TIGER 미국채30년스트립액티브","364980":"KODEX 미국채10년선물","371460":"RISE 미국S&P500","379800":"KODEX 미국S&P500TR","381060":"TIGER 미국S&P500배당성장","381170":"TIGER 글로벌리튬&2차전지SOLACTIVE","381180":"TIGER 글로벌핀테크INDXX","385550":"KODEX 단기채권","385560":"KODEX 테슬라채권혼합Wise","396500":"TIGER 글로벌혁신기술기업INDXX","396510":"ACE 미국S&P500","396520":"TIGER 미국테크TOP10INDXX","411060":"KODEX 글로벌클린에너지","428610":"SOL 미국S&P500","432320":"ACE 미국배당+3%프리미엄다우존스","432340":"TIGER 미국배당+3%프리미엄다우존스","432360":"TIGER 미국테크TOP10커버드콜","432980":"KODEX 미국배당커버드콜액티브","443200":"ACE 미국나스닥100커버드콜(합성)","445290":"ACE 미국채30년액티브","446720":"SOL 미국배당다우존스","448290":"ACE 미국배당다우존스","449450":"ACE 미국빅테크TOP7Plus","449480":"SOL 미국배당다우존스(H)","452340":"KODEX 국고채30년액티브","453850":"KODEX 미국나스닥100데일리커버드콜OTM","458760":"KODEX 미국S&P500배당귀족커버드콜","460770":"TIGER S&P500배당귀족커버드콜","463050":"KODEX 미국AI테크TOP10INDXX","463070":"TIGER 미국AI빅테크10","464600":"TIGER 미국나스닥100커버드콜ATM","466940":"TIGER 미국배당+7%프리미엄다우존스","467980":"PLUS 미국배당S&P500커버드콜","472160":"ACE 미국배당+7%프리미엄다우존스","476550":"TIGER 미국나스닥100커버드콜(합성)","476560":"KODEX 미국나스닥100커버드콜(합성)"};
+
+let _codeTimer = null;
 function onCodeInput(val){
   val = val.trim();
   if(!val) return;
-  // A069500 또는 069500 형식 모두 처리
   const code = val.replace(/^A/i,'').padStart(6,'0');
   if(code.length !== 6 || !/^\d{6}$/.test(code)) return;
-  
+
   const status = document.getElementById('t-name-status');
   const nameEl = document.getElementById('t-name');
-  
-  // 이미 이름이 있고 사용자가 직접 입력한 경우 덮어쓰지 않음
   if(nameEl.dataset.manual === '1') return;
-  
+
+  // 1순위: 내장 DB 즉시 반환
+  if(ETF_DB[code]) {
+    nameEl.value = ETF_DB[code];
+    status.textContent = '✓';
+    setTimeout(()=>status.textContent='', 1500);
+    return;
+  }
+
+  // 2순위: 입력 완료 후 0.5초 뒤 JSONP 조회 (디바운스)
+  clearTimeout(_codeTimer);
   status.textContent = '조회중...';
-  
-  // 네이버 금융 종목 검색 API (JSONP 방식, CORS 없음)
-  const script = document.createElement('script');
-  const cbName = '_ncb_' + code;
-  window[cbName] = function(data) {
-    document.head.removeChild(script);
-    delete window[cbName];
-    if(data && data.items && data.items.length > 0) {
-      const item = data.items.find(i => i.code === code) || data.items[0];
-      if(item && item.name) {
-        nameEl.value = item.name;
-        status.textContent = '✓';
-        setTimeout(()=>status.textContent='', 2000);
-      } else {
-        status.textContent = '';
+  _codeTimer = setTimeout(() => {
+    const cbName = '_nc_' + code + '_' + Date.now();
+    const script = document.createElement('script');
+    let done = false;
+    const cleanup = () => {
+      if(done) return; done = true;
+      try { document.head.removeChild(script); } catch(e){}
+      delete window[cbName];
+    };
+    window[cbName] = (data) => {
+      cleanup();
+      const items = data && (data.items || data.d);
+      if(items && items.length > 0) {
+        // 네이버 AC 응답: [{code, name}] 또는 [[code, name, ...]]
+        const item = items.find(i => (i[0]||i.code||'') === code) || items[0];
+        const name = item ? (Array.isArray(item) ? item[1] : item.name) : null;
+        if(name) {
+          nameEl.value = name;
+          status.textContent = '✓';
+          setTimeout(()=>status.textContent='', 1500);
+          return;
+        }
       }
-    } else {
       status.textContent = '';
-    }
-  };
-  script.onerror = () => {
-    document.head.removeChild(script);
-    delete window[cbName];
-    status.textContent = '';
-  };
-  script.src = `https://ac.finance.naver.com/ac?q=${code}&q_enc=utf-8&t_koreng=1&st=111&r_format=json&callback=${cbName}`;
-  document.head.appendChild(script);
+    };
+    script.onerror = () => { cleanup(); status.textContent = ''; };
+    script.src = `https://ac.finance.naver.com/ac?q=${code}&q_enc=utf-8&t_koreng=1&st=111&r_format=json&callback=${cbName}`;
+    setTimeout(cleanup, 3000); // 3초 타임아웃
+    document.head.appendChild(script);
+  }, 500);
 }
 
 function saveTicker(){
