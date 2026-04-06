@@ -318,7 +318,7 @@ select{appearance:none;-webkit-appearance:none;background-image:url("data:image/
   <div class="sheet-handle"></div>
   <h2 id="ticker-title">종목 추가</h2>
   <div class="frow">
-    <div class="field"><label>종목코드</label><input id="t-code" placeholder="A069500" inputmode="text" oninput="onCodeInput(this.value)"></div>
+    <div class="field"><label>종목코드</label><input id="t-code" placeholder="A069500" inputmode="text" oninput="document.getElementById('t-name').dataset.manual='';onCodeInput(this.value)"></div>
     <div class="field"><label>종목명 <span id="t-name-status" style="font-size:10px;color:var(--text3)"></span></label><input id="t-name" placeholder="자동입력" oninput="this.dataset.manual=this.value?'1':''"></div>
   </div>
   <div class="frow">
@@ -716,7 +716,7 @@ function openTicker(idx){
   const t=idx>=0?T[idx]:{code:'',name:'',acct:'일반',cat:'국내주식',qty:'',cost:'',price:''};
   document.getElementById('t-code').value=t.code;
   document.getElementById('t-name').value=t.name;
-  document.getElementById('t-name').dataset.manual='1';
+  document.getElementById('t-name').dataset.manual=t.name?'1':'';
   document.getElementById('t-acct').value=t.acct;
   document.getElementById('t-cat').value=t.cat;
   document.getElementById('t-qty').value=t.qty||'';
