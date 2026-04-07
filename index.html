@@ -728,34 +728,61 @@ function openTicker(idx){
 const ETF_DB = {"472150": "TIGER 배당커버드콜액티브", "472160": "ACE 미국배당+7%프리미엄다우존스", "448290": "ACE 미국배당다우존스", "432320": "ACE 미국배당+3%프리미엄다우존스", "449450": "ACE 미국빅테크TOP7Plus", "396510": "ACE 미국S&P500", "445290": "ACE 미국채30년액티브", "443200": "ACE 미국나스닥100커버드콜(합성)", "411050": "ACE KRX금현물", "411060": "ACE 글로벌인컴TOP10INDXX", "468370": "ACE 미국빅테크TOP7Plus채권혼합블룸버그", "476690": "ACE 미국500밸류커버드콜", "476700": "ACE 미국나스닥100EW", "494730": "ACE 미국배당커버드콜액티브", "432340": "TIGER 미국배당+3%프리미엄다우존스", "466940": "TIGER 미국배당+7%프리미엄다우존스", "360200": "TIGER 미국S&P500", "360750": "TIGER 미국나스닥100", "381060": "TIGER 미국S&P500배당성장", "396520": "TIGER 미국테크TOP10INDXX", "432360": "TIGER 미국테크TOP10커버드콜", "460770": "TIGER S&P500배당귀족커버드콜", "464600": "TIGER 미국나스닥100커버드콜ATM", "476550": "TIGER 미국나스닥100커버드콜(합성)", "463070": "TIGER 미국AI빅테크10", "446720": "SOL 미국배당다우존스", "449480": "SOL 미국배당다우존스(H)", "428610": "SOL 미국S&P500", "476050": "SOL 미국배당다우존스(1Y)", "379800": "KODEX 미국S&P500TR", "432980": "KODEX 미국배당커버드콜액티브", "453850": "KODEX 미국나스닥100데일리커버드콜OTM", "458760": "KODEX 미국S&P500배당귀족커버드콜", "476560": "KODEX 미국나스닥100커버드콜(합성)", "463050": "KODEX 미국AI테크TOP10INDXX", "385560": "KODEX 테슬라채권혼합Wise", "308620": "KODEX 미국채30년선물", "364980": "KODEX 미국채10년선물", "452340": "KODEX 국고채30년액티브", "385550": "KODEX 단기채권", "272570": "KODEX 단기채권PLUS", "329200": "KODEX 금현물", "305080": "KODEX 200미국채혼합", "467980": "PLUS 미국배당S&P500커버드콜", "371460": "RISE 미국S&P500", "269530": "HANARO 200", "069500": "KODEX 200", "102110": "TIGER 200", "229200": "KODEX 코스닥150", "219390": "TIGER 코스닥150", "122630": "KODEX 레버리지", "266410": "TIGER 코스닥150레버리지", "114800": "KODEX 인버스", "252670": "KODEX 200선물인버스2X", "148020": "KODEX 코스닥150레버리지", "233740": "KODEX 코스닥150선물인버스", "091160": "KODEX 반도체", "157500": "TIGER 반도체", "104530": "KODEX 바이오", "091170": "KODEX 은행", "091220": "TIGER 은행", "143460": "TIGER 현대차그룹+펀더멘털", "228790": "TIGER 화장품", "232080": "TIGER 여행레저", "305470": "TIGER K게임", "130680": "TIGER 원유선물Enhanced(H)", "132030": "KODEX 골드선물", "329750": "TIGER 금은선물(H)", "261220": "KODEX WTI원유선물(H)", "195930": "KODEX 선진국MSCI World", "381170": "TIGER 글로벌리튬&2차전지SOLACTIVE", "411540": "TIGER 차이나전기차SOLACTIVE", "396500": "TIGER 글로벌혁신기술기업INDXX", "143850": "KODEX 미국달러선물", "305540": "TIGER 미국채10년선물", "069660": "KODEX 코스피100", "176950": "TIGER 코스피", "148070": "KOSEF 200TR", "278540": "KODEX MSCI Korea TR", "133690": "KODEX 나스닥100", "280930": "TIGER 미국MSCI리츠부동산(합성H)"};
 
 let _codeTimer = null;
-async function lookupByClaudeAPI(code) {
+async function lookupStockName(code) {
   const status = document.getElementById('t-name-status');
   const nameEl = document.getElementById('t-name');
   status.textContent = '조회중...';
+
+  // 다음 금융 검색 API (CORS 허용, API 키 불필요)
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 100,
-        system: '한국 주식/ETF 종목코드를 종목명으로 변환해주는 도우미입니다. 종목코드를 받으면 정확한 한국어 종목명만 답하세요. 모르면 "알수없음"이라고만 답하세요. 예: 069500 → KODEX 200, 472150 → TIGER 배당커버드콜액티브',
-        messages: [{ role: 'user', content: `종목코드 ${code}의 종목명은?` }]
-      })
-    });
-    const data = await res.json();
-    const name = data.content?.[0]?.text?.trim();
-    if (name && name !== '알수없음' && name.length < 50) {
-      nameEl.value = name;
-      // ETF_DB에도 캐시
-      ETF_DB[code] = name;
-      status.textContent = '✓';
-      setTimeout(() => status.textContent = '', 1500);
-    } else {
-      status.textContent = '직접 입력';
+    const res = await fetch(
+      `https://finance.daum.net/api/search/symbols?query=${code}&page=1&perPage=5`,
+      { headers: { Referer: 'https://finance.daum.net/' } }
+    );
+    if (res.ok) {
+      const data = await res.json();
+      const items = data.data || [];
+      // 코드가 정확히 일치하는 종목 우선, 없으면 첫 번째
+      const item = items.find(i => i.symbolCode === code || i.symbolCode === 'A'+code) || items[0];
+      if (item?.name) {
+        nameEl.value = item.name;
+        ETF_DB[code] = item.name; // 세션 캐시
+        status.textContent = '✓';
+        setTimeout(() => status.textContent = '', 1500);
+        return;
+      }
     }
+  } catch(e) {}
+
+  // 폴백: 네이버 금융 JSONP (CSP 허용 여부에 따라)
+  try {
+    await new Promise((resolve) => {
+      const cbName = '_nf_' + code;
+      const script = document.createElement('script');
+      let done = false;
+      window[cbName] = (data) => {
+        if (done) return; done = true;
+        try { document.head.removeChild(script); } catch(e) {}
+        delete window[cbName];
+        const items = data?.items || [];
+        const item = items.find(i => i.code === code) || items[0];
+        if (item?.name) {
+          nameEl.value = item.name;
+          ETF_DB[code] = item.name;
+          status.textContent = '✓';
+          setTimeout(() => status.textContent = '', 1500);
+        } else {
+          status.textContent = '';
+        }
+        resolve();
+      };
+      script.onerror = () => { done = true; status.textContent = ''; resolve(); };
+      script.src = `https://ac.finance.naver.com/ac?q=${code}&q_enc=utf-8&t_koreng=1&st=111&r_format=json&callback=${cbName}`;
+      setTimeout(() => { if(!done){done=true; status.textContent=''; resolve();} }, 3000);
+      document.head.appendChild(script);
+    });
   } catch(e) {
-    status.textContent = '직접 입력';
+    status.textContent = '';
   }
 }
 
@@ -765,21 +792,21 @@ function onCodeInput(val){
   const code = val.replace(/^A/i,'').padStart(6,'0');
   if(code.length !== 6 || !/^\d{6}$/.test(code)) return;
 
-  const status = document.getElementById('t-name-status');
   const nameEl = document.getElementById('t-name');
   if(nameEl.dataset.manual === '1') return;
 
-  // 1순위: 내장 DB 즉시 반환 (캐시)
+  // 1순위: 내장 DB (즉시)
   if(ETF_DB[code]) {
     nameEl.value = ETF_DB[code];
+    const status = document.getElementById('t-name-status');
     status.textContent = '✓';
     setTimeout(()=>status.textContent='', 1500);
     return;
   }
 
-  // 2순위: 0.6초 디바운스 후 Claude API로 정확한 종목명 조회
+  // 2순위: 0.6초 디바운스 후 실시간 조회 (다음금융 → 네이버 폴백)
   clearTimeout(_codeTimer);
-  _codeTimer = setTimeout(() => lookupByClaudeAPI(code), 600);
+  _codeTimer = setTimeout(() => lookupStockName(code), 600);
 }
 
 function saveTicker(){
